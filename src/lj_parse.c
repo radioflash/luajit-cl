@@ -1737,6 +1737,7 @@ static void expr_table(LexState *ls, ExpDesc *e)
   uint32_t nhash = 0;  /* Number of hash entries. */
   BCReg freg = fs->freereg;
   BCPos pc = bcemit_AD(fs, BC_TNEW, freg, 0);
+  int simpleassign = 0; /* next entry in table constructor: <name> = <expr> */
   expr_init(e, VNONRELOC, freg);
   bcreg_reserve(fs, 1);
   freg++;
@@ -1749,8 +1750,8 @@ static void expr_table(LexState *ls, ExpDesc *e)
       if (!expr_isk(&key)) expr_index(fs, e, &key);
       if (expr_isnumk(&key) && expr_numiszero(&key)) needarr = 1; else nhash++;
       lex_check(ls, '=');
-    } else if ((ls->token == TK_name || (!LJ_52 && ls->token == TK_goto)) &&
-	       lj_lex_lookahead(ls) == '=') {
+    } else if (simpleassign || ((ls->token == TK_name ||
+        (!LJ_52 && ls->token == TK_goto)) && lj_lex_lookahead(ls) == '=')) {
       expr_str(ls, &key);
       lex_check(ls, '=');
       nhash++;
@@ -1788,7 +1789,13 @@ static void expr_table(LexState *ls, ExpDesc *e)
       bcemit_store(fs, e, &val);
     }
     fs->freereg = freg;
-    if (!lex_opt(ls, ',') && !lex_opt(ls, ';')) break;
+
+    if((ls->token == TK_name || (!LJ_52 && ls->token == TK_goto)) &&
+	lj_lex_lookahead(ls) == '=') {
+      if(!lex_opt(ls, ',')) lex_opt(ls, ';');
+      simpleassign = 1;
+    }
+    else if (!lex_opt(ls, ',') && !lex_opt(ls, ';')) break;
   }
   lex_match(ls, '}', '{', line);
   if (vcall) {
