@@ -1719,8 +1719,8 @@ static void expr_table(LexState *ls, ExpDesc *e)
       if (!expr_isk(&key)) expr_index(fs, e, &key);
       if (expr_isnumk(&key) && expr_numiszero(&key)) needarr = 1; else nhash++;
       lex_check(ls, '=');
-    } else if (simpleassign || ((ls->token == TK_name ||
-	(!LJ_52 && ls->token == TK_goto)) && lj_lex_lookahead(ls) == '=')) {
+    } else if (simpleassign || ((ls->tok == TK_name ||
+	(!LJ_52 && ls->tok == TK_goto)) && lj_lex_lookahead(ls) == '=')) {
       expr_str(ls, &key);
       lex_check(ls, '=');
       nhash++;
@@ -1759,7 +1759,7 @@ static void expr_table(LexState *ls, ExpDesc *e)
     }
     fs->freereg = freg;
 
-    if((ls->token == TK_name || (!LJ_52 && ls->token == TK_goto)) &&
+    if((ls->tok == TK_name || (!LJ_52 && ls->tok == TK_goto)) &&
 	lj_lex_lookahead(ls) == '=') {
       if(!lex_opt(ls, ',')) lex_opt(ls, ';');
       simpleassign = 1;
